@@ -2,6 +2,34 @@ tile_size = 16
 world_size = [20, 20]
 
 world = ((0 for y in [1..world_size[1]]) for x in [1..world_size[1]])
+world[5][7] = 1
+console.log(world)
+
+make_bush = (x, y) ->
+    bush = Crafty.e("2D, Canvas, bush1, Mouse")
+        .attr(x: x * tile_size, y: y * tile_size, z: 2)
+    bush.bind("Click", () ->
+        world[x][y] = 0
+        bush.destroy()
+    )
+
+
+place_tile = (x, y) -> 
+    Crafty.e("2D, Canvas, grass1, Mouse")
+        .attr(x: x * tile_size, y: y * tile_size, z: 1)
+        .bind("Click", () ->
+            world[x][y] = 1
+            make_bush(x, y)
+        )
+
+    if world[x][y] == 1
+        make_bush(x, y)
+
+generate_world = () ->
+    for x in [0..world_size[0] - 1]
+        for y in [0..world_size[1] - 1]
+            place_tile(x, y)
+
 
 window.onload = () ->
     # start crafty
@@ -13,9 +41,9 @@ window.onload = () ->
 
         # black background with some loading text
         Crafty.background("#000")
-        Crafty.e("2D, DOM, Text").attr({ w: 100, h: 20, x: 150, y: 120 })
-                .text("Loading")
-                .css({ "text-align": "center" })
+        Crafty.e("2D, Canvas, Text")
+            .attr({ w: 100, h: 20, x: 150, y: 120 })
+            .text("Loading")
     )
 
     Crafty.sprite(tile_size, "sprite.png",
@@ -33,10 +61,7 @@ window.onload = () ->
     )
 
     Crafty.scene("main", () ->
-
-        for i in [0..world_size[0]]
-            for j in [0..world_size[1]]
-                Crafty.e("2D, DOM, grass1").attr(x: i * tile_size, y: j * tile_size, z: 1)
+        generate_world()
     )
 
     # automatically play the loading scene
