@@ -2,8 +2,8 @@ tile_size = 16
 world_size = [20, 20]
 
 world = ((0 for y in [1..world_size[1]]) for x in [1..world_size[1]])
-world[5][7] = 1
-console.log(world)
+start = [5,5]
+end = [16,16]
 
 make_bush = (x, y) ->
     bush = Crafty.e("2D, Canvas, bush1, Mouse")
@@ -13,6 +13,13 @@ make_bush = (x, y) ->
         bush.destroy()
     )
 
+make_start = (x, y) ->
+    Crafty.e("2D, Canvas, player")
+        .attr(x: x * tile_size, y: y * tile_size, z: 2)
+
+make_end = (x, y) ->
+    Crafty.e("2D, Canvas, flower")
+        .attr(x: x * tile_size, y: y * tile_size, z: 2)
 
 place_tile = (x, y) -> 
     Crafty.e("2D, Canvas, grass1, Mouse")
@@ -30,6 +37,8 @@ generate_world = () ->
         for y in [0..world_size[1] - 1]
             place_tile(x, y)
 
+    make_start(start[0], start[1])
+    make_end(end[0], end[1])
 
 window.onload = () ->
     # start crafty
