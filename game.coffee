@@ -7,9 +7,10 @@ make_grid = (size_x, size_y, value=null) ->
 make_bush = (x, y) ->
     bush = Crafty.e("2D, Canvas, bush1, Mouse")
         .attr(x: x * tile_size, y: y * tile_size, z: 2)
-    bush.bind("Click", () ->
-        world[x][y] = 0
-        bush.destroy()
+    bush.bind("MouseOver", (e) ->
+        if e.mouseButton == Crafty.mouseButtons.RIGHT
+            world[x][y] = 0
+            bush.destroy()
     )
 
 make_start = (x, y) ->
@@ -23,9 +24,10 @@ make_end = (x, y) ->
 make_grass = (x, y) ->
     grass = Crafty.e("2D, Canvas, grass1, Mouse, Tint")
         .attr(x: x * tile_size, y: y * tile_size, z: 1)
-        .bind("Click", () ->
-            world[x][y] = 1
-            make_bush(x, y)
+        .bind("MouseOver", (e) ->
+            if e.mouseButton == Crafty.mouseButtons.LEFT
+                world[x][y] = 1
+                make_bush(x, y)
         ).tint("#000000", 0)
     grasses[x][y] = grass
 
