@@ -125,6 +125,22 @@
       push: function(object, priority) {
         contents.push({object: object, priority: priority});
         sorted = false;
+      },
+
+      update: function(object, priority) {
+        for(var i = contents.length - 1; i >= 0; i--) {
+          if(contents[i].object === object) {
+            contents[i].priority = priority;
+            sorted = false;
+            return;
+          }
+        }
+      },
+
+      debug_print: function() {
+        for(var i = contents.length - 1; i >= 0; i--) {
+          console.log("(" + contents[i].object.x + "," + contents[i].object.y + ") -> " + contents[i].priority)
+        }
       }
     };
 
