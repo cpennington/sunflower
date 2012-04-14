@@ -71,7 +71,7 @@ root.AStar =
                     open_set.push(point)
                     on_frontier(point)
                     should_move_to_point = true
-                elif score_to_beat < point.score
+                else if score_to_beat < point.score
                     should_move_to_point = true
 
                 if should_move_to_point
