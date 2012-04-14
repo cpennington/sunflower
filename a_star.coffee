@@ -46,9 +46,10 @@ root.AStar =
 
         startPoint.set_heuristic_score(endPoint)
         open_set.push(startPoint, startPoint.get_total_score())
-        
+
         while open_set.top()?
             current = open_set.pop()
+            on_expand(current)
             if current.is_same_position(endPoint)
                 reconstruct_path(current)
 
@@ -68,6 +69,7 @@ root.AStar =
                 should_move_to_point = false
                 if not open_set.includes(point)
                     open_set.push(point)
+                    on_frontier(point)
                     should_move_to_point = true
                 elif score_to_beat < point.score
                     should_move_to_point = true
