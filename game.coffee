@@ -50,7 +50,7 @@ generate_world = () ->
 show_path = () ->
     path = AStar.get_path(world, start, end,
         (pos) -> grasses[pos.x][pos.y].tint("#FF0000", .9),
-        (pos) -> grasses[pos.x][pos.y].tint("#0000FF", .9)
+        (pos) -> grasses[pos.x][pos.y].tint("#0000FF", .9),
     )
     for pos in path
         grasses[pos.x][pos.y].tint("#FFFFFF", .8)
