@@ -47,11 +47,18 @@ generate_world = () ->
     make_start(start[0], start[1])
     make_end(end[0], end[1])
 
+show_path = () ->
+    path = AStar.get_path(world, start, end,
+        (pos) -> grasses[pos.x][pos.y].tint("#FF0000", .9),
+        (pos) -> grasses[pos.x][pos.y].tint("#0000FF", .9)
+    )
+    for pos in path
+        grasses[pos.x][pos.y].tint("#FFFFFF", .8)
+
 world = make_grid(world_size[0], world_size[1], 0)
 grasses = make_grid(world_size[0], world_size[1])
 start = [5,5]
 end = [16,16]
-
 
 window.onload = () ->
     # start crafty
@@ -88,4 +95,6 @@ window.onload = () ->
 
     # automatically play the loading scene
     Crafty.scene("loading")
+
+    $("#path").click(show_path)
 

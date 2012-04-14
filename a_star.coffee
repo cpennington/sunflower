@@ -31,18 +31,21 @@ get_neighbors = (map, point, goal) ->
                 
     return neighbors
 
-get_path = (map, start, goal) ->
-    open_set = new PriorityQueue({low:true})
+root = exports ? this
+root.AStar = 
+    get_path: (map, start, goal, on_frontier=null, on_expand=null) ->
+        open_set = new PriorityQueue({low:true})
 
-    startPoint = new PathPoint2(start[0], start[1], 0, null)
-    endPoint = new PathPoint2(end[0], end[1], -1, null)
+        startPoint = new PathPoint2(start[0], start[1], 0, null)
+        endPoint = new PathPoint2(end[0], end[1], -1, null)
 
-    startPoint.set_heuristic_score(endPoint)
-    open_set.push(startPoint, startPoint.get_total_score())
+        startPoint.set_heuristic_score(endPoint)
+        open_set.push(startPoint, startPoint.get_total_score())
 
-    while open_set.top()?
-        current = open_set.pop()
-        if current.is_same(endPoint)
-            alert("done!")
+        while open_set.top()?
+            current = open_set.pop()
+            on_expand?(current)
+            if current.is_same(endPoint)
+                alert("done!")
 
-        current.closed = true
+            current.closed = true
