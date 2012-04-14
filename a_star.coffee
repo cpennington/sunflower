@@ -1,5 +1,5 @@
 class PathPoint2
-    constructor: (@x, @y, @score) ->
+    constructor: (@x, @y, @score, @from_point) ->
 
     set_heuristic_score = (end) ->
         x_diff = end.x - this.x
@@ -8,6 +8,9 @@ class PathPoint2
 
     get_total_score = () ->
         return this.score + (this.heuristic ? 0)
+
+    is_same = (other) ->
+        return other.x == this.x && other.y == this.y
 
 get_neighbors = (map, point, goal) ->
     neighbors = []
@@ -22,7 +25,7 @@ get_neighbors = (map, point, goal) ->
             new_y = point.y + dy
             if ((new_x < max_x) && (new_x >= 0) && (new_y < max_y) && (new_y >= 0))
                 new_score = point.score + dx + dy
-                new_point = new PathPoint2(new_x, new_y, new_score)
+                new_point = new PathPoint2(new_x, new_y, new_score, point)
                 new_point.set_heuristic_score(goal)
                 neighbors.push(new_point)
                 
@@ -30,18 +33,16 @@ get_neighbors = (map, point, goal) ->
 
 get_path = (map, start, goal) ->
     open_set = new PriorityQueue({low:true})
-    closed_set = []
-    came_from = {}
 
-    startPoint = new PathPoint2(start[0], start[1], 0)
-    endPoint = new PathPoint2(end[0], end[1], -1)
+    startPoint = new PathPoint2(start[0], start[1], 0, null)
+    endPoint = new PathPoint2(end[0], end[1], -1, null)
 
     startPoint.set_heuristic_score(endPoint)
     open_set.push(startPoint, startPoint.get_total_score())
 
     while open_set.top()?
         current = open_set.pop()
-        if current == goal
+        if current.is_same(endPoint)
             alert("done!")
 
-        closed_set[start] = true
+        current.closed = true
