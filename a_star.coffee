@@ -8,7 +8,7 @@ class PathPoint2
         this.heuristic = (x_diff*x_diff) + (y_diff*y_diff)
 
     get_total_score: () ->
-        return this.score + (this.heuristic ? 0)
+        return (this.score*this.score) + (this.heuristic ? 0)
 
     is_same_position: (other) ->
         return other.x == this.x && other.y == this.y
@@ -65,6 +65,7 @@ root.AStar =
                     point = new PathPoint2(neighbor[0], neighbor[1], current.score + 1)
                     point.set_heuristic_score(endPoint)
                     all_points[point.x][point.y] = point
+                    console.log("creating point (" + point.x + "," + point.y + ") with score " + point.score + " and heuristic score " + point.heuristic)
 
                 if point.closed
                     continue
