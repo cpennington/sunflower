@@ -1,3 +1,3 @@
 #! /bin/bash
 
-coffee -o build -w *.coffee
+coffee -o build -w .
