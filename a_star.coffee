@@ -4,6 +4,7 @@ OPEN = 1
 class PathPoint2
     constructor: (@x, @y, @score) ->
         this.state = null
+        this.parent = null
 
     set_heuristic_score: (end) ->
         x_diff = end.x - this.x
@@ -52,7 +53,6 @@ root.AStar =
         all_points = make_grid(map.length, map[0].length)
 
         startPoint = new PathPoint2(start[0], start[1], 0)
-        startPoint.parent = null
         all_points[start[0]][start[1]] = startPoint
 
         endPoint = new PathPoint2(goal[0], goal[1], -1)
@@ -63,7 +63,6 @@ root.AStar =
         while open_set.size() > 0
             current = open_set.pop()
             on_expand(current)
-            Crafty.timer.step()
             console.log("expanding point (" + current.x + "," + current.y + ") with total score " + current.get_total_score())
             if current.is_same_position(endPoint)
                 return reconstruct_path(current)
@@ -89,7 +88,6 @@ root.AStar =
                     point.state = OPEN
                     open_set.push(point)
                     on_frontier(point)
-                    Crafty.timer.step()
                     console.log("adding frontier point (" + point.x + "," + point.y + ") with total score " + point.get_total_score())
                 else if tentative_score < point.score
                     point.parent = current

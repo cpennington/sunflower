@@ -58,7 +58,7 @@ show_path = () ->
 world = make_grid(world_size[0], world_size[1], 0)
 grasses = make_grid(world_size[0], world_size[1])
 start = [5,5]
-end = [10,10]
+end = [16,19]
 
 window.onload = () ->
     # start crafty
