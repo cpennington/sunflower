@@ -5,7 +5,6 @@ Crafty.c("2DPhysics",
         _ax: 0
         _ay: 0
         _last_time: -1
-        _scaling_factor: 10
 
         init: () ->
             this.requires("2D")
@@ -26,7 +25,7 @@ Crafty.c("2DPhysics",
             )
 
         _calculate_position: (v, a, dt) ->
-            return ((v * dt) - ((a * dt * dt) / 2)) / this._scaling_factor
+            return (v * dt) - ((a * dt * dt) / 2)
 
         _calculate_velocity: (a, dt) ->
             return a * dt

@@ -14,8 +14,8 @@ make_bush = (x, y) ->
 
 NEAR_DIST = 10
 FAR_DIST = 20
-VELOCITY = 2
-ACCELERATION = 0.01
+VELOCITY = 0.2
+ACCELERATION = 0.001
 
 get_vector_magnitude = (x, y) ->
     return Math.sqrt(x * x + y * y)
