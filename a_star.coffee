@@ -5,10 +5,10 @@ class PathPoint2
     set_heuristic_score: (end) ->
         x_diff = end.x - this.x
         y_diff = end.y - this.y
-        this.heuristic = (x_diff*x_diff) + (y_diff*y_diff)
+        this.heuristic = Math.abs(x_diff) + Math.abs(y_diff)
 
     get_total_score: () ->
-        return (this.score*this.score) + (this.heuristic ? 0)
+        return this.score + (this.heuristic ? 0)
 
     is_same_position: (other) ->
         return other.x == this.x && other.y == this.y
@@ -28,8 +28,8 @@ reconstruct_path = (endPoint) ->
     path = []
     point = endPoint
     while point?
-        path.push(endPoint)
-        point = endPoint.parent
+        path.push(point)
+        point = point.parent
     return path
 
 make_grid = (size_x, size_y, value=null) ->
@@ -42,10 +42,10 @@ root.AStar =
         all_points = make_grid(map.length, map[0].length)
 
         startPoint = new PathPoint2(start[0], start[1], 0)
+        startPoint.parent = null
         all_points[start[0]][start[1]] = startPoint
 
         endPoint = new PathPoint2(goal[0], goal[1], -1)
-        all_points[goal[0]][goal[1]] = endPoint
 
         startPoint.set_heuristic_score(endPoint)
         open_set.push(startPoint, startPoint.get_total_score())
@@ -56,7 +56,7 @@ root.AStar =
             Crafty.timer.step()
             console.log("expanding point (" + current.x + "," + current.y + ") with total score " + current.get_total_score())
             if current.is_same_position(endPoint)
-                reconstruct_path(current)
+                return reconstruct_path(current)
 
             current.closed = true
             for neighbor in get_neighbors(map, current, goal)
@@ -75,12 +75,13 @@ root.AStar =
                 should_move_to_point = false
                 console.log("evaluating point (" + point.x + "," + point.y + ") with score " + point.score + " and heuristic score " + point.heuristic)
                 if not open_set.includes(point)
+                    point.parent = current
                     open_set.push(point, point.get_total_score())
                     on_frontier(point)
                     Crafty.timer.step()
                     console.log("adding frontier point (" + point.x + "," + point.y + ") with total score " + point.get_total_score())
-                    point.parent = current
                 else if tentative_score < point.score
                     point.parent = current
                     point.score = tentative_score
                     open_set.update(point, point.get_total_score())
+                    console.log("updating frontier point (" + point.x + "," + point.y + ") with total score " + point.get_total_score())
