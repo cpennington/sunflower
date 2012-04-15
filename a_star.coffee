@@ -1,23 +1,25 @@
 CLOSED = 0
 OPEN = 1
 
+DEBUG = 0
+
 class PathPoint2
-    constructor: (@x, @y, @score) ->
+    constructor: (@x, @y) ->
         this.state = null
         this.parent = null
+        this.score = 0
+        this.heuristic = 0
+        this.total_score = 0
 
-    set_heuristic_score: (end) ->
-        x_diff = end.x - this.x
-        y_diff = end.y - this.y
-        this.heuristic = Math.abs(x_diff) + Math.abs(y_diff)
+    set_score: (new_score) ->
+        this.score = new_score
+        this.total_score = this.heuristic + new_score
 
-    get_total_score: () ->
-        return this.score + (this.heuristic ? 0)
+    set_heuristic: (new_heuristic) ->
+        this.heuristic = new_heuristic
+        this.total_score = this.score + new_heuristic
 
-    is_same_position: (other) ->
-        return other.x == this.x && other.y == this.y
-
-get_neighbors = (map, point, goal) ->
+get_neighbors = (map, point) ->
     neighbors = []
     max_x = map.length
     max_y = map[0].length
@@ -27,6 +29,9 @@ get_neighbors = (map, point, goal) ->
         if ((new_x < max_x) && (new_x >= 0) && (new_y < max_y) && (new_y >= 0) && map[new_x][new_y] == 0)
             neighbors.push([new_x, new_y])
     return neighbors
+
+calculate_heuristic = (start, end) ->
+    return Math.abs(end.x - start.x) + Math.abs(end.y - start.y)
 
 reconstruct_path = (endPoint) ->
     path = []
@@ -45,52 +50,47 @@ root.AStar =
         open_set = new MinHeap(null, (a, b) ->
             if a == b
                 0
-            else if a.get_total_score() < b.get_total_score()
+            else if a.total_score < b.total_score
                 -1
             else
                 1
         )
         all_points = make_grid(map.length, map[0].length)
 
-        startPoint = new PathPoint2(start[0], start[1], 0)
+        startPoint = new PathPoint2(start[0], start[1])
         all_points[start[0]][start[1]] = startPoint
 
-        endPoint = new PathPoint2(goal[0], goal[1], -1)
+        endPoint = new PathPoint2(goal[0], goal[1])
 
-        startPoint.set_heuristic_score(endPoint)
-        open_set.push(startPoint, startPoint.get_total_score())
+        startPoint.set_heuristic(calculate_heuristic(startPoint, endPoint))
+        open_set.push(startPoint, startPoint.total_score)
 
         while open_set.size() > 0
             current = open_set.pop()
             on_expand(current)
-            console.log("expanding point (" + current.x + "," + current.y + ") with total score " + current.get_total_score())
-            if current.is_same_position(endPoint)
+            if current.x == endPoint.x && current.y == endPoint.y
                 return reconstruct_path(current)
 
             current.state = CLOSED
-            for neighbor in get_neighbors(map, current, goal)
+            for neighbor in get_neighbors(map, current)
                 point = all_points[neighbor[0]][neighbor[1]]
+
+                tentative_score = current.score + 1
                 if not point?
-                    point = new PathPoint2(neighbor[0], neighbor[1], current.score + 1)
-                    point.set_heuristic_score(endPoint)
+                    point = new PathPoint2(neighbor[0], neighbor[1])
+                    point.set_score(tentative_score)
+                    point.set_heuristic(calculate_heuristic(point, endPoint))
                     all_points[point.x][point.y] = point
-                    console.log("creating point (" + point.x + "," + point.y + ") with score " + point.score + " and heuristic score " + point.heuristic)
 
                 if point.state == CLOSED
                     continue
 
-                tentative_score = current.score + 1
-
-                should_move_to_point = false
-                console.log("evaluating point (" + point.x + "," + point.y + ") with score " + point.score + " and heuristic score " + point.heuristic)
                 if point.state == null
                     point.parent = current
                     point.state = OPEN
                     open_set.push(point)
                     on_frontier(point)
-                    console.log("adding frontier point (" + point.x + "," + point.y + ") with total score " + point.get_total_score())
                 else if tentative_score < point.score
                     point.parent = current
-                    point.score = tentative_score
+                    point.set_score(tentative_score)
                     open_set.heapify()
-                    console.log("updating frontier point (" + point.x + "," + point.y + ") with total score " + point.get_total_score())

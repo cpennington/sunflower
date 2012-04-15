@@ -1,5 +1,5 @@
 tile_size = 16
-world_size = [20, 20]
+world_size = [30, 20]
 
 make_grid = (size_x, size_y, value=null) ->
     ((value for y in [1..size_y]) for x in [1..size_x])
@@ -58,11 +58,11 @@ show_path = () ->
 world = make_grid(world_size[0], world_size[1], 0)
 grasses = make_grid(world_size[0], world_size[1])
 start = [5,5]
-end = [16,19]
+end = [19,8]
 
 window.onload = () ->
     # start crafty
-    Crafty.init(world_size[0]*tile_size, world_size[0]*tile_size)
+    Crafty.init(world_size[0]*tile_size, world_size[1]*tile_size)
 
     # the loading screen that will display while our assets load
     Crafty.scene("loading", () ->
