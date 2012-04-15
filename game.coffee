@@ -12,9 +12,42 @@ make_bush = (x, y) ->
         bush.destroy()
     )
 
+NEAR_DIST = 10
+FAR_DIST = 20
+VELOCITY = 2
+ACCELERATION = 0.01
+
+get_vector_magnitude = (x, y) ->
+    return Math.sqrt(x * x + y * y)
+
+get_vector_from_magnitude_direction = (m, vx, vy) ->
+    vec = []
+    mag = get_vector_magnitude(vx, vy)
+    vec.push(vx * (m/mag))
+    vec.push(vy * (m/mag))
+    return vec
+
 make_start = (x, y) ->
-    Crafty.e("2D, Canvas, player")
-        .attr(x: x * tile_size, y: y * tile_size, z: 2)
+    player = Crafty.e("2D, Canvas, 2DPhysics, Controls, player")
+        .attr(x: x * tile_size, y: y * tile_size, z: 2, _frameCount: 0)
+        .bind("EnterFrame", (e) ->
+            target_x = Crafty.mousePos.x
+            target_y = Crafty.mousePos.y
+            diff_x = target_x - this.x
+            diff_y = target_y - this.y
+            if not isNaN(diff_x) and not isNaN(diff_y)
+                dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y)
+                if dist >= FAR_DIST
+                    new_accel = get_vector_from_magnitude_direction(ACCELERATION, diff_x, diff_y)
+                    this.set_acceleration(new_accel[0], new_accel[1])
+                else if dist >= NEAR_DIST
+                    this.set_acceleration(0,0)
+                    new_velocity = get_vector_from_magnitude_direction(VELOCITY, diff_x, diff_y)
+                    this.set_velocity(new_velocity[0], new_velocity[1])
+                else
+                    this.set_velocity(0,0)
+                    this.set_position(target_x, target_y)
+        )
 
 make_end = (x, y) ->
     Crafty.e("2D, Canvas, flower")
@@ -54,6 +87,7 @@ show_path = () ->
     )
     for pos in path
         grasses[pos.x][pos.y].tint("#FFFFFF", .8)
+
 
 world = make_grid(world_size[0], world_size[1], 0)
 grasses = make_grid(world_size[0], world_size[1])
