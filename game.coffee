@@ -40,6 +40,11 @@ make_start = (x, y) ->
                 if dist >= FAR_DIST
                     new_accel = get_vector_from_magnitude_direction(ACCELERATION, diff_x, diff_y)
                     this.set_acceleration(new_accel[0], new_accel[1])
+
+                    old_velocity = this.get_velocity()
+                    old_magnitude = get_vector_magnitude(old_velocity[0], old_velocity[1])
+                    new_velocity = get_vector_from_magnitude_direction(old_magnitude, diff_x, diff_y)
+                    this.set_velocity(new_velocity[0], new_velocity[1])
                 else if dist >= NEAR_DIST
                     this.set_acceleration(0,0)
                     new_velocity = get_vector_from_magnitude_direction(VELOCITY, diff_x, diff_y)
