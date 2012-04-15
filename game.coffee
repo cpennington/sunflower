@@ -27,6 +27,36 @@ get_vector_from_magnitude_direction = (m, vx, vy) ->
     vec.push(vy * (m/mag))
     return vec
 
+v_dot = (a, b) -> a[0] * b[0] + a[1] * b[1]
+v_scale = (s, v) -> [s * v[0], s * v[1]]
+v_project = (a, b) -> v_scale(v_dot(a, b) / v_dot(b, b), b)
+v_reject = (a, b) -> a - v_project(a, b)
+v_add = (a, b) -> [a[0] + b[0], a[1] + b[1]]
+v_sub = (a, b) -> [a[0] - b[0], a[1] - b[1]]
+v_length = (v) -> Math.sqrt(v_dot(v, v))
+v_norm = (v) -> v_scale(1/v_length(v), v)
+v_cap = (max, v) ->
+    len = v_length(v)
+    if len > max
+        v_scale(max/len, v)
+    else
+        v
+
+
+TIME_TO_TARGET = 50
+PROJECT_ACCEL = .0001
+MAX_ACCEL = .005
+REJECT_ACCEL = -.01
+
+debug_vector = (start, vec, color) ->
+    end = v_add(start, vec)
+    ctx = Crafty.canvas.context
+    ctx.strokeStyle = color
+    ctx.beginPath()
+    ctx.moveTo(start[0], start[1])
+    ctx.lineTo(end[0], end[1])
+    ctx.stroke()
+
 make_start = (x, y) ->
     player = Crafty.e("2D, Canvas, 2DPhysics, Controls, player")
         .attr(x: x * tile_size, y: y * tile_size, z: 2, _frameCount: 0)
@@ -36,22 +66,23 @@ make_start = (x, y) ->
             diff_x = target_x - this.x
             diff_y = target_y - this.y
             if not isNaN(diff_x) and not isNaN(diff_y)
-                dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y)
-                if dist >= FAR_DIST
-                    new_accel = get_vector_from_magnitude_direction(ACCELERATION, diff_x, diff_y)
-                    this.set_acceleration(new_accel[0], new_accel[1])
+                delta = [diff_x, diff_y]
+                target_velocity = v_scale(1 / TIME_TO_TARGET, delta)
+                vgood = v_project(this.get_velocity(), target_velocity)
+                vbad = v_sub(this.get_velocity(), vgood)
+                agood = v_cap(MAX_ACCEL, v_sub(target_velocity, vgood))
+                abad = v_scale(REJECT_ACCEL, vbad)
+                accel = v_add(agood, abad)
+                #debug_vector(this.get_position(), v_scale(20, target_velocity), "rgba(0,255,0,1)")
+                #console.log(v_dot(vgood, target_velocity))
+                #if v_dot(agood, target_velocity) > 0
+                #    debug_vector(v_add(v_add(this.get_position(), v_scale(20, target_velocity)), [-5, -5]), v_scale(100000, agood), "rgba(0,0,255,1)")
+                #else
+                #    debug_vector(v_add(v_add(this.get_position(), v_scale(20, target_velocity)), [-5, -5]), v_scale(100000, agood), "rgba(255,0,0,1)")
 
-                    old_velocity = this.get_velocity()
-                    old_magnitude = get_vector_magnitude(old_velocity[0], old_velocity[1])
-                    new_velocity = get_vector_from_magnitude_direction(old_magnitude, diff_x, diff_y)
-                    this.set_velocity(new_velocity[0], new_velocity[1])
-                else if dist >= NEAR_DIST
-                    this.set_acceleration(0,0)
-                    new_velocity = get_vector_from_magnitude_direction(VELOCITY, diff_x, diff_y)
-                    this.set_velocity(new_velocity[0], new_velocity[1])
-                else
-                    this.set_velocity(0,0)
-                    this.set_position(target_x, target_y)
+                #debug_vector(this.get_position(), v_scale(1000, abad), "rgba(255,0,0,1)")
+                #debug_vector(this.get_position(), v_scale(1000, this.get_velocity()), "rgba(0,0,255,1)")
+                this.set_acceleration(accel[0], accel[1])
         )
 
 make_end = (x, y) ->
@@ -65,7 +96,7 @@ make_grass = (x, y) ->
             if e.mouseButton == Crafty.mouseButtons.RIGHT
                 world[x][y] = 1
                 make_bush(x, y))
-        .bind("Click", () ->
+        .bind("Click", ->
             world[x][y] = 1
             make_bush(x, y))
         .tint("#000000", 0)
@@ -77,7 +108,7 @@ setup_tile = (x, y) ->
     if world[x][y] == 1
         make_bush(x, y)
 
-generate_world = () ->
+generate_world = ->
     for x in [0..world_size[0] - 1]
         for y in [0..world_size[1] - 1]
             setup_tile(x, y)
@@ -85,7 +116,7 @@ generate_world = () ->
     make_start(start[0], start[1])
     make_end(end[0], end[1])
 
-show_path = () ->
+show_path = ->
     path = AStar.get_path(world, start, end,
         (pos) -> grasses[pos.x][pos.y].tint("#FF0000", .9),
         (pos) -> grasses[pos.x][pos.y].tint("#0000FF", .9),
@@ -99,13 +130,13 @@ grasses = make_grid(world_size[0], world_size[1])
 start = [5,5]
 end = [19,8]
 
-window.onload = () ->
+window.onload = ->
     # start crafty
     Crafty.init(world_size[0]*tile_size, world_size[1]*tile_size)
 
     # the loading screen that will display while our assets load
-    Crafty.scene("loading", () ->
-        Crafty.load(["sprite.png"], () -> Crafty.scene("main"))
+    Crafty.scene("loading", ->
+        Crafty.load(["sprite.png"], -> Crafty.scene("main"))
 
         # black background with some loading text
         Crafty.background("#000")
@@ -128,12 +159,12 @@ window.onload = () ->
         empty: [4, 0],
     )
 
-    Crafty.scene("main", () ->
+    Crafty.scene("main", ->
         generate_world()
     )
 
     # automatically play the loading scene
     Crafty.scene("loading")
 
-    $("#path").click(show_path)
+    $("#pause").click(-> Crafty.pause())
 

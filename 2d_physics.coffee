@@ -6,7 +6,7 @@ Crafty.c("2DPhysics",
         _ay: 0
         _last_time: -1
 
-        init: () ->
+        init: ->
             this.requires("2D")
             this.bind("EnterFrame", () ->
                 current_time = (new Date()).getTime()
@@ -35,16 +35,19 @@ Crafty.c("2DPhysics",
             this.y = y
             return this
 
+        get_position: -> [this.x, this.y]
+
         set_velocity: (vx, vy) ->
             this._vx = vx
             this._vy = vy
             return this
 
-        get_velocity: () ->
-            return [this._vx, this._vy]
+        get_velocity: -> [this._vx, this._vy]
 
         set_acceleration: (ax, ay) ->
             this._ax = ax
             this._ay = ay
             return this
+
+        get_acceleration: -> [this._ax, this._ay]
     })
