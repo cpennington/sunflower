@@ -1,6 +1,9 @@
+CLOSED = 0
+OPEN = 1
+
 class PathPoint2
     constructor: (@x, @y, @score) ->
-        this.closed = false
+        this.state = null
 
     set_heuristic_score: (end) ->
         x_diff = end.x - this.x
@@ -38,7 +41,14 @@ make_grid = (size_x, size_y, value=null) ->
 root = exports ? this
 root.AStar = 
     get_path: (map, start, goal, on_frontier=null, on_expand=null) ->
-        open_set = new PriorityQueue({low:true})
+        open_set = new MinHeap(null, (a, b) ->
+            if a == b
+                0
+            else if a.get_total_score() < b.get_total_score()
+                -1
+            else
+                1
+        )
         all_points = make_grid(map.length, map[0].length)
 
         startPoint = new PathPoint2(start[0], start[1], 0)
@@ -50,7 +60,7 @@ root.AStar =
         startPoint.set_heuristic_score(endPoint)
         open_set.push(startPoint, startPoint.get_total_score())
 
-        while open_set.top()?
+        while open_set.size() > 0
             current = open_set.pop()
             on_expand(current)
             Crafty.timer.step()
@@ -58,7 +68,7 @@ root.AStar =
             if current.is_same_position(endPoint)
                 return reconstruct_path(current)
 
-            current.closed = true
+            current.state = CLOSED
             for neighbor in get_neighbors(map, current, goal)
                 point = all_points[neighbor[0]][neighbor[1]]
                 if not point?
@@ -67,21 +77,22 @@ root.AStar =
                     all_points[point.x][point.y] = point
                     console.log("creating point (" + point.x + "," + point.y + ") with score " + point.score + " and heuristic score " + point.heuristic)
 
-                if point.closed
+                if point.state == CLOSED
                     continue
 
                 tentative_score = current.score + 1
 
                 should_move_to_point = false
                 console.log("evaluating point (" + point.x + "," + point.y + ") with score " + point.score + " and heuristic score " + point.heuristic)
-                if not open_set.includes(point)
+                if point.state == null
                     point.parent = current
-                    open_set.push(point, point.get_total_score())
+                    point.state = OPEN
+                    open_set.push(point)
                     on_frontier(point)
                     Crafty.timer.step()
                     console.log("adding frontier point (" + point.x + "," + point.y + ") with total score " + point.get_total_score())
                 else if tentative_score < point.score
                     point.parent = current
                     point.score = tentative_score
-                    open_set.update(point, point.get_total_score())
+                    open_set.heapify()
                     console.log("updating frontier point (" + point.x + "," + point.y + ") with total score " + point.get_total_score())
