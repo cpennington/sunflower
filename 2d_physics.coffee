@@ -1,13 +1,11 @@
-Crafty.c("2DPhysics", 
+Crafty.c("SunflowerPhysics", 
     {
-        _vx: 0
-        _vy: 0
-        _ax: 0
-        _ay: 0
+        _position: []
+        _velocity: []
+        _acceleration: []
         _last_time: -1
 
-        init: ->
-            this.requires("2D")
+        init: () ->
             this.bind("EnterFrame", () ->
                 current_time = (new Date()).getTime()
                 if this._last_time < 0
@@ -17,37 +15,51 @@ Crafty.c("2DPhysics",
                 dt = current_time - this._last_time
                 this._last_time = current_time
 
-                this.x += this._calculate_position(this._vx, this._ax, dt)
-                this.y += this._calculate_position(this._vy, this._ay, dt)
+                this._from_engine()
 
-                this._vx += this._calculate_velocity(this._ax, dt)
-                this._vy += this._calculate_velocity(this._ay, dt)
+                num_dimensions = this._position.length
+                for dimension in [0..(num_dimensions-1)]
+                    this._position[dimension] += this._calculate_delta_position(this._velocity[dimension], this._acceleration[dimension], dt)
+
+                for dimension in [0..(num_dimensions-1)]
+                    this._velocity[dimension] += this._calculate_delta_velocity(this._acceleration[dimension], dt)
+
+                this._to_engine()
             )
 
-        _calculate_position: (v, a, dt) ->
+        _calculate_delta_position: (v, a, dt) ->
             return (v * dt) - ((a * dt * dt) / 2)
 
-        _calculate_velocity: (a, dt) ->
+        _calculate_delta_velocity: (a, dt) ->
             return a * dt
 
-        set_position: (x, y) ->
-            this.x = x
-            this.y = y
+        _from_engine: () ->
+            this._position[0] = this.x
+            this._position[1] = this.y
+            if(this._velocity.length < 2)
+                this._velocity = [0,0]
+            if(this._acceleration.length < 2)
+                this._acceleration = [0,0]
+
+        _to_engine: () ->
+            this.x = this._position[0]
+            this.y = this._position[1]
+
+        set_position: (vector) ->
+            this._position = vector.slice()
             return this
 
-        get_position: -> [this.x, this.y]
+        get_position: () -> this._position.slice()
 
-        set_velocity: (vx, vy) ->
-            this._vx = vx
-            this._vy = vy
+        set_velocity: (vector) ->
+            this._velocity = vector.slice()
             return this
 
-        get_velocity: -> [this._vx, this._vy]
+        get_velocity: (dim) -> this._velocity.slice()
 
-        set_acceleration: (ax, ay) ->
-            this._ax = ax
-            this._ay = ay
+        set_acceleration: (vector) ->
+            this._acceleration = vector.slice()
             return this
 
-        get_acceleration: -> [this._ax, this._ay]
+        get_acceleration: () -> this._acceleration.slice()
     })

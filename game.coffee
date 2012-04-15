@@ -5,12 +5,9 @@ make_grid = (size_x, size_y, value=null) ->
     ((value for y in [1..size_y]) for x in [1..size_x])
 
 make_bush = (x, y) ->
-    bush = Crafty.e("2D, Canvas, bush1, Mouse")
+    bush = Crafty.e("2D, Canvas, bush1, Collision")
         .attr(x: x * tile_size, y: y * tile_size, z: 2)
-    bush.bind("Click", (e) ->
-        world[x][y] = 0
-        bush.destroy()
-    )
+        .collision()
 
 NEAR_DIST = 10
 FAR_DIST = 20
@@ -58,8 +55,8 @@ debug_vector = (start, vec, color) ->
     ctx.stroke()
 
 make_start = (x, y) ->
-    player = Crafty.e("2D, Canvas, 2DPhysics, Controls, player")
-        .attr(x: x * tile_size, y: y * tile_size, z: 2, _frameCount: 0)
+    player = Crafty.e("2D, Canvas, SunflowerPhysics, Collision, Mouse, player")
+        .attr(x: x * tile_size, y: y * tile_size, z: 2)
         .bind("EnterFrame", (e) ->
             target_x = Crafty.mousePos.x
             target_y = Crafty.mousePos.y
@@ -82,7 +79,35 @@ make_start = (x, y) ->
 
                 #debug_vector(this.get_position(), v_scale(1000, abad), "rgba(255,0,0,1)")
                 #debug_vector(this.get_position(), v_scale(1000, this.get_velocity()), "rgba(0,0,255,1)")
-                this.set_acceleration(accel[0], accel[1])
+                this.set_acceleration(accel)
+        ).collision()
+        .onHit("bush1", (e) ->
+                normal = e[0].normal
+                magnitude = -(e[0].overlap)
+                this.x += normal.x * magnitude
+                this.y += normal.y * magnitude
+            )
+    Crafty.addEvent(this, window.document, "mousedown", (e) ->
+            Crafty.e("2D, DOM, Color, SunflowerPhysics, Collision, bullet")
+                .attr({
+                        x: player.x
+                        y: player.y
+                        w: 3
+                        h: 3
+                        z: 2
+                    })
+                .color("rgb(255,0,0)")
+                .set_velocity(player.get_velocity())
+                .timeout(() ->
+                    this.destroy()
+                , 3000)
+                .bind("EnterFrame", () ->
+                    if(this._x > Crafty.viewport.width || this._x < 0 || this._y > Crafty.viewport.height || this._y < 0)
+                        this.destroy()
+                ).collision()
+                .onHit("bush1", (e) ->
+                        this.destroy()
+                )
         )
 
 make_end = (x, y) ->
@@ -90,20 +115,18 @@ make_end = (x, y) ->
         .attr(x: x * tile_size, y: y * tile_size, z: 2)
 
 make_grass = (x, y) ->
-    grass = Crafty.e("2D, Canvas, grass1, Mouse, Tint")
+    grass = Crafty.e("2D, Canvas, grass1, Tint")
         .attr(x: x * tile_size, y: y * tile_size, z: 1)
-        .bind("MouseOver", (e) ->
-            if e.mouseButton == Crafty.mouseButtons.RIGHT
-                world[x][y] = 1
-                make_bush(x, y))
-        .bind("Click", ->
-            world[x][y] = 1
-            make_bush(x, y))
         .tint("#000000", 0)
     grasses[x][y] = grass
 
 setup_tile = (x, y) ->
     make_grass(x, y)
+
+    if (x == end[0] and y == end[1]) or (x == start[0] and y == start[1]) then return
+
+    if Crafty.math.randomInt(0, 20) == 0
+        world[x][y] = 1
 
     if world[x][y] == 1
         make_bush(x, y)
